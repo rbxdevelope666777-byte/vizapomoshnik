@@ -6,13 +6,38 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+app.set("trust proxy", 1); // реальный IP посетителя за хостингом
+
+// ---------- Защита ключа: лимит запросов к ИИ ----------
+// RATE_LIMIT — сколько запросов с одного IP в час (по умолчанию 30)
+// DAILY_LIMIT — сколько запросов всего в сутки на весь сайт (по умолчанию 500)
+const RATE_LIMIT = Number(process.env.RATE_LIMIT || 30);
+const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 500);
+const hits = new Map();
+let day = new Date().toDateString(), dayCount = 0;
+app.use("/api", (req, res, next) => {
+  const now = Date.now();
+  if (new Date().toDateString() !== day) { day = new Date().toDateString(); dayCount = 0; }
+  if (dayCount >= DAILY_LIMIT) return res.status(429).json({ error: "Сайт исчерпал дневной лимит запросов. Попробуйте завтра." });
+  const list = (hits.get(req.ip) || []).filter((t) => now - t < 3600_000);
+  if (list.length >= RATE_LIMIT) return res.status(429).json({ error: "Слишком много запросов. Попробуйте через час." });
+  list.push(now); hits.set(req.ip, list); dayCount++;
+  if (hits.size > 10000) hits.clear();
+  next();
+});
 app.use(express.static(path.join(here, "public")));
 
 // Ключ — OPENAI_API_KEY; адрес сервиса (для посредников) — OPENAI_BASE_URL
 // Клиент создаётся при первом запросе, чтобы сайт запускался даже без ключа
 let client;
-const ai = () => (client ??= new OpenAI());
-const MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+// .trim() убирает случайные пробелы/переносы строки, попавшие при копировании
+const clean = (v) => (v || "").trim().replace(/^["']|["']$/g, "") || undefined;
+const ai = () =>
+  (client ??= new OpenAI({
+    apiKey: clean(process.env.OPENAI_API_KEY),
+    baseURL: clean(process.env.OPENAI_BASE_URL),
+  }));
+const MODEL = (process.env.OPENAI_MODEL || "gpt-5.4-mini").trim();
 
 const SYSTEM_PROMPT = `Ты — «ВизаПомощник», ИИ-консультант по визам и въездным документам.
 Отвечай на русском языке (если пользователь пишет на другом языке — на его языке).
@@ -72,7 +97,15 @@ async function streamToClient(res, params) {
 }
 
 function describeError(err) {
-  if (err instanceof OpenAI.AuthenticationError || /OPENAI_API_KEY/.test(err?.message || "")) return "Неверный или отсутствующий API-ключ (OPENAI_API_KEY).";
+  if (err instanceof OpenAI.AuthenticationError) {
+    console.error("Сервис отклонил ключ:", err.status, err.message);
+    return "Сервис отклонил API-ключ (OPENAI_API_KEY). Ответ сервиса: " + err.message;
+  }
+  if (/OPENAI_API_KEY/.test(err?.message || "")) return "API-ключ не задан (OPENAI_API_KEY).";
+  if (err instanceof OpenAI.PermissionDeniedError) {
+    console.error("Доступ запрещён:", err.status, err.message);
+    return "Сервис запретил доступ (возможно, блокирует сервер хостинга). Ответ: " + err.message;
+  }
   if (err instanceof OpenAI.RateLimitError) {
     if (err.code === "insufficient_quota") return "На балансе OpenAI нет денег. Пополните его на platform.openai.com → Billing.";
     return "Слишком много запросов. Подождите немного и повторите.";
@@ -223,5 +256,7 @@ app.post("/api/letter", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`ВизаПомощник: http://localhost:${PORT}  (модель: ${MODEL}, сервис: ${process.env.OPENAI_BASE_URL || "api.openai.com"})`);
-  if (!process.env.OPENAI_API_KEY) console.warn("⚠️  OPENAI_API_KEY не задан — запросы к ИИ работать не будут.");
+  const k = clean(process.env.OPENAI_API_KEY);
+  if (k) console.log(`Ключ: ${k.slice(0, 5)}…${k.slice(-3)} (длина ${k.length})`);
+  if (!k) console.warn("⚠️  OPENAI_API_KEY не задан — запросы к ИИ работать не будут.");
 });
