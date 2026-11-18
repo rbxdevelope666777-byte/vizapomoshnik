@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ВизаПомощник — ИИ-помощник по визам</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">🛂 <b>ВизаПомощник</b><span>ИИ-ассистент для оформления визы</span></div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="chat">💬 Консультант</button>
+      <button class="tab" data-tab="checklist">📋 Чек-лист документов</button>
+      <button class="tab" data-tab="letter">✉️ Сопроводительное письмо</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Чат -->
+    <section id="chat" class="panel active">
+      <div id="messages" class="messages">
+        <div class="msg assistant">Здравствуйте! Я помогу разобраться с визой: какой тип нужен, какие документы собрать, как подать заявку. Расскажите: ваше гражданство, куда и зачем едете?</div>
+      </div>
+      <div class="suggestions">
+        <button>Нужна ли гражданину РФ виза в Японию?</button>
+        <button>Как получить шенгенскую визу для туризма?</button>
+        <button>Какие документы нужны для студенческой визы в Канаду?</button>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <textarea id="chat-input" rows="2" placeholder="Задайте вопрос о визе..." required></textarea>
+        <button type="submit" class="primary">Отправить</button>
+      </form>
+    </section>
+
+    <!-- Чек-лист -->
+    <section id="checklist" class="panel">
+      <form id="checklist-form" class="card grid">
+        <label>Гражданство*<input name="citizenship" required placeholder="Россия" /></label>
+        <label>Страна проживания<input name="residence" placeholder="Казахстан" /></label>
+        <label>Страна назначения*<input name="destination" required placeholder="Германия" /></label>
+        <label>Цель поездки*
+          <select name="purpose" required>
+            <option>Туризм</option><option>Бизнес / командировка</option><option>Учёба</option>
+            <option>Работа</option><option>Посещение родственников</option><option>Транзит</option><option>Лечение</option>
+          </select>
+        </label>
+        <label>Длительность<input name="duration" placeholder="14 дней" /></label>
+        <label class="wide">Дополнительно<textarea name="notes" rows="2" placeholder="Были ли визы/отказы, едете с детьми и т.д."></textarea></label>
+        <button type="submit" class="primary wide">Составить чек-лист</button>
+      </form>
+      <div id="checklist-result"></div>
+    </section>
+
+    <!-- Письмо -->
+    <section id="letter" class="panel">
+      <form id="letter-form" class="card grid">
+        <label>ФИО*<input name="fullName" required placeholder="Ivan Ivanov" /></label>
+        <label>Гражданство<input name="citizenship" placeholder="Россия" /></label>
+        <label>Страна назначения*<input name="destination" required placeholder="Франция" /></label>
+        <label>Цель поездки*<input name="purpose" required placeholder="Туризм" /></label>
+        <label>Даты поездки<input name="dates" placeholder="10.06 – 24.06" /></label>
+        <label>Язык письма
+          <select name="language"><option>английский</option><option>русский</option><option>немецкий</option><option>французский</option><option>испанский</option><option>итальянский</option></select>
+        </label>
+        <label>Работа / должность<input name="job" placeholder="ООО «Ромашка», инженер" /></label>
+        <label>Финансирование<input name="funding" placeholder="Собственные средства" /></label>
+        <label class="wide">Связи с родиной<input name="ties" placeholder="Квартира в собственности, семья, постоянная работа" /></label>
+        <label class="wide">Дополнительно<textarea name="extra" rows="2"></textarea></label>
+        <button type="submit" class="primary wide">Сгенерировать письмо</button>
+      </form>
+      <div id="letter-wrap" class="card hidden">
+        <div class="row"><b>Результат</b><button id="copy-letter">Копировать</button></div>
+        <pre id="letter-result"></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer>⚠️ ИИ может ошибаться, а визовые правила меняются. Всегда проверяйте требования на официальном сайте консульства или визового центра.</footer>
+  <script src="app.js"></script>
+</body>
+</html>
