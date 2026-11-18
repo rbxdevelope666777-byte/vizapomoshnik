@@ -2,6 +2,7 @@ import express from "express";
 import OpenAI from "openai";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { demoChatAnswer, demoChecklist, demoLetter } from "./demo.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -16,6 +17,7 @@ const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 500);
 const hits = new Map();
 let day = new Date().toDateString(), dayCount = 0;
 app.use("/api", (req, res, next) => {
+  if (req.path === "/status") return next();
   const now = Date.now();
   if (new Date().toDateString() !== day) { day = new Date().toDateString(); dayCount = 0; }
   if (dayCount >= DAILY_LIMIT) return res.status(429).json({ error: "Сайт исчерпал дневной лимит запросов. Попробуйте завтра." });
@@ -118,6 +120,24 @@ function describeError(err) {
   return "Ошибка: " + (err?.message || String(err));
 }
 
+// ---------- Демо-режим ----------
+const DEMO = process.env.DEMO_MODE === "1";
+app.get("/api/status", (req, res) => res.json({ demo: DEMO }));
+
+// Имитирует «печатающийся» ответ ИИ
+async function streamDemo(res, text) {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.flushHeaders();
+  const parts = text.match(/[\s\S]{1,12}/g) || [];
+  for (const p of parts) {
+    sendSSE(res, { type: "text", text: p });
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  sendSSE(res, { type: "done" });
+  res.end();
+}
+
 // ---------- 1. Чат-консультант ----------
 app.post("/api/chat", async (req, res) => {
   const history = Array.isArray(req.body.messages) ? req.body.messages : [];
@@ -129,6 +149,7 @@ app.post("/api/chat", async (req, res) => {
   if (!messages.length || messages[messages.length - 1].role !== "user") {
     return res.status(400).json({ error: "Последнее сообщение должно быть от пользователя." });
   }
+  if (DEMO) return streamDemo(res, demoChatAnswer(messages));
 
   await streamToClient(res, {
     max_completion_tokens: 16000,
@@ -169,6 +190,10 @@ app.post("/api/checklist", async (req, res) => {
   const { citizenship, residence, destination, purpose, duration, notes } = req.body || {};
   if (!citizenship || !destination || !purpose) {
     return res.status(400).json({ error: "Укажите гражданство, страну назначения и цель поездки." });
+  }
+  if (DEMO) {
+    await new Promise((r) => setTimeout(r, 1500));
+    return res.json(demoChecklist({ citizenship, destination, purpose, duration }));
   }
   const prompt = `Составь персональный чек-лист для получения визы.
 Гражданство: ${citizenship}
@@ -227,6 +252,7 @@ app.post("/api/letter", async (req, res) => {
   if (!f.fullName || !f.destination || !f.purpose) {
     return res.status(400).json({ error: "Укажите ФИО, страну назначения и цель поездки." });
   }
+  if (DEMO) return streamDemo(res, demoLetter(f));
   const prompt = `Напиши сопроводительное письмо (cover letter) в консульство для визовой заявки.
 Язык письма: ${f.language || "английский"}.
 Данные заявителя:
@@ -256,6 +282,7 @@ app.post("/api/letter", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`ВизаПомощник: http://localhost:${PORT}  (модель: ${MODEL}, сервис: ${process.env.OPENAI_BASE_URL || "api.openai.com"})`);
+  if (DEMO) console.log("🎭 Демо-режим включён: ответы заготовлены, ИИ не вызывается.");
   const k = clean(process.env.OPENAI_API_KEY);
   if (k) console.log(`Ключ: ${k.slice(0, 5)}…${k.slice(-3)} (длина ${k.length})`);
   if (!k) console.warn("⚠️  OPENAI_API_KEY не задан — запросы к ИИ работать не будут.");

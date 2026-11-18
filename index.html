@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ВизаПомощник — ИИ-помощник по оформлению визы</title>
+  <meta name="description" content="ИИ-консультант по визам: подскажет тип визы, составит список документов и напишет сопроводительное письмо." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛂</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="demo-banner" class="demo-banner hidden">🎭 Демо-режим: ответы заготовлены заранее и показывают, как работает сайт</div>
+
+  <header class="top">
+    <a class="brand" href="#" data-go="home"><span class="logo">🛂</span><b>ВизаПомощник</b></a>
+    <nav class="tabs">
+      <button class="tab active" data-tab="home">Главная</button>
+      <button class="tab" data-tab="chat"><span class="ico">💬 </span>Консультант</button>
+      <button class="tab" data-tab="checklist"><span class="ico">📋 </span>Чек-лист</button>
+      <button class="tab" data-tab="letter"><span class="ico">✉️ </span>Письмо</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Главная -->
+    <section id="home" class="panel active">
+      <div class="hero">
+        <h1>Оформите визу без стресса</h1>
+        <p class="lead">ИИ-помощник подскажет, какая виза вам нужна, составит персональный список документов и поможет написать сопроводительное письмо в консульство.</p>
+        <div class="hero-actions">
+          <button class="primary big" data-go="chat">Задать вопрос</button>
+          <button class="big" data-go="checklist">Составить чек-лист</button>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature card" data-go="chat">
+          <div class="f-icon">💬</div>
+          <h3>ИИ-консультант</h3>
+          <p>Отвечает на вопросы о визах, сроках, сборах и порядке подачи, а при нехватке данных задаёт уточняющие вопросы.</p>
+        </div>
+        <div class="feature card" data-go="checklist">
+          <div class="f-icon">📋</div>
+          <h3>Чек-лист документов</h3>
+          <p>Персональный список под ваше гражданство, страну и цель поездки. Отмечайте собранное и распечатайте список.</p>
+        </div>
+        <div class="feature card" data-go="letter">
+          <div class="f-icon">✉️</div>
+          <h3>Сопроводительное письмо</h3>
+          <p>Готовое письмо в консульство на нужном языке за минуту. Останется только проверить и подписать.</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Как это работает</h2>
+      <div class="steps">
+        <div class="step"><span>1</span><p>Расскажите, кто вы и куда едете</p></div>
+        <div class="step"><span>2</span><p>Получите список документов и план действий</p></div>
+        <div class="step"><span>3</span><p>Соберите документы и подайте заявку</p></div>
+      </div>
+
+      <h2 class="section-title">Частые вопросы</h2>
+      <div class="faq">
+        <details class="card"><summary>Это бесплатно?</summary><p>Да, пользоваться сайтом можно бесплатно.</p></details>
+        <details class="card"><summary>Можно ли полностью доверять ответам?</summary><p>ИИ помогает разобраться и сэкономить время, но визовые правила меняются. Перед подачей всегда сверяйтесь с официальным сайтом консульства или визового центра.</p></details>
+        <details class="card"><summary>Сайт подаёт документы за меня?</summary><p>Нет. Сайт помогает подготовиться, а документы вы подаёте сами: в консульстве, визовом центре или онлайн.</p></details>
+        <details class="card"><summary>Сохраняются ли мои данные?</summary><p>История чата и отметки в чек-листе хранятся только в вашем браузере. Их можно удалить кнопкой «Новый чат».</p></details>
+      </div>
+    </section>
+
+    <!-- Чат -->
+    <section id="chat" class="panel">
+      <div class="panel-head">
+        <h2>💬 ИИ-консультант</h2>
+        <button id="new-chat" class="ghost">＋ Новый чат</button>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div class="suggestions" id="suggestions">
+        <button>Нужна ли гражданину РФ виза в Японию?</button>
+        <button>Как получить шенгенскую визу для туризма?</button>
+        <button>Какие документы нужны для студенческой визы в Канаду?</button>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <textarea id="chat-input" rows="2" placeholder="Задайте вопрос о визе… (Enter — отправить, Shift+Enter — новая строка)" required></textarea>
+        <button type="submit" class="primary">Отправить</button>
+      </form>
+    </section>
+
+    <!-- Чек-лист -->
+    <section id="checklist" class="panel">
+      <div class="panel-head"><h2>📋 Чек-лист документов</h2></div>
+      <form id="checklist-form" class="card grid">
+        <label>Гражданство*<input name="citizenship" required placeholder="Россия" list="countries" /></label>
+        <label>Страна проживания<input name="residence" placeholder="Казахстан" list="countries" /></label>
+        <label>Страна назначения*<input name="destination" required placeholder="Германия" list="countries" /></label>
+        <label>Цель поездки*
+          <select name="purpose" required>
+            <option>Туризм</option><option>Бизнес / командировка</option><option>Учёба</option>
+            <option>Работа</option><option>Посещение родственников</option><option>Транзит</option><option>Лечение</option>
+          </select>
+        </label>
+        <label>Длительность<input name="duration" placeholder="14 дней" /></label>
+        <label class="wide">Дополнительно<textarea name="notes" rows="2" placeholder="Были ли визы или отказы, едете ли с детьми и т. д."></textarea></label>
+        <button type="submit" class="primary wide">Составить чек-лист</button>
+      </form>
+      <div id="checklist-result"></div>
+    </section>
+
+    <!-- Письмо -->
+    <section id="letter" class="panel">
+      <div class="panel-head"><h2>✉️ Сопроводительное письмо</h2></div>
+      <form id="letter-form" class="card grid">
+        <label>ФИО (латиницей, как в загранпаспорте)*<input name="fullName" required placeholder="Ivan Ivanov" /></label>
+        <label>Гражданство<input name="citizenship" placeholder="Россия" list="countries" /></label>
+        <label>Страна назначения*<input name="destination" required placeholder="Франция" list="countries" /></label>
+        <label>Цель поездки*<input name="purpose" required placeholder="Туризм" /></label>
+        <label>Даты поездки<input name="dates" placeholder="10.06 – 24.06" /></label>
+        <label>Язык письма
+          <select name="language"><option>английский</option><option>русский</option><option>немецкий</option><option>французский</option><option>испанский</option><option>итальянский</option></select>
+        </label>
+        <label>Работа и должность<input name="job" placeholder="ООО «Ромашка», инженер" /></label>
+        <label>Кто оплачивает поездку<input name="funding" placeholder="Собственные средства" /></label>
+        <label class="wide">Что связывает вас с родиной<input name="ties" placeholder="Квартира в собственности, семья, постоянная работа" /></label>
+        <label class="wide">Дополнительно<textarea name="extra" rows="2"></textarea></label>
+        <button type="submit" class="primary wide">Сгенерировать письмо</button>
+      </form>
+      <div id="letter-wrap" class="card hidden">
+        <div class="row"><b>Результат</b>
+          <div class="row-actions"><button id="copy-letter" class="ghost">Копировать</button><button id="download-letter" class="ghost">Скачать .txt</button></div>
+        </div>
+        <pre id="letter-result"></pre>
+      </div>
+    </section>
+  </main>
+
+  <datalist id="countries">
+    <option>Россия</option><option>Беларусь</option><option>Казахстан</option><option>Украина</option><option>Узбекистан</option><option>Кыргызстан</option><option>Армения</option><option>Грузия</option><option>Азербайджан</option>
+    <option>Германия</option><option>Франция</option><option>Италия</option><option>Испания</option><option>Греция</option><option>Чехия</option><option>Польша</option><option>Финляндия</option><option>Нидерланды</option>
+    <option>Великобритания</option><option>США</option><option>Канада</option><option>Австралия</option><option>Япония</option><option>Китай</option><option>Южная Корея</option><option>Индия</option><option>ОАЭ</option><option>Турция</option><option>Таиланд</option>
+  </datalist>
+
+  <footer>
+    <p>⚠️ ИИ может ошибаться, а визовые правила меняются. Всегда проверяйте требования на официальном сайте консульства или визового центра.</p>
+    <p class="muted">© ВизаПомощник</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
